@@ -1,6 +1,6 @@
 import { range, sortBy, round } from "lodash"
 import React from 'react'
-import Link from 'next/link'
+import NLink from 'next/link'
 import Head from 'next/head'
 import moment from 'moment'
 
@@ -19,6 +19,7 @@ import MenuItem from 'material-ui/MenuItem'
 
 import {
   Container,
+  Link,
   Input,
   Label,
   Checkbox,
@@ -373,6 +374,13 @@ export default class extends React.Component {
           </VictoryChart>
 
           <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
+          <Heading>Download</Heading>
+          <ul>
+          <li><Link href='/data/vanilla-tor/20171130-vanilla_tor-measurements.csv'>
+          measurements.csv</Link></li>
+          <li><Link href='/data/vanilla-tor/20171130-vanilla_tor-stats.csv'>
+          stats.csv</Link></li>
+          </ul>
         </Container>
       </Layout>
     )
