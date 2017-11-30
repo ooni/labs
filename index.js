@@ -24,10 +24,8 @@ app.prepare()
   })
 })
 .then(() => {
-	server.use('/_/data',
+	server.use('/data',
 						 express.static(__dirname + '/data/'))
-	server.use('/_/static',
-						 express.static(__dirname + '/static/'))
 
 	// Default catch all
 	server.all('*', (req, res) => {

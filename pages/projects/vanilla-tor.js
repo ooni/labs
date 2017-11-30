@@ -26,7 +26,7 @@ import {
   colors
 } from 'ooni-components'
 
-import victoryTheme from 'ooni-components/theme/victoryTheme'
+import victoryTheme from 'ooni-components/dist/theme/victoryTheme'
 
 import {
   Table,
@@ -201,8 +201,8 @@ export default class extends React.Component {
     if (req) {
       prefix = 'http://127.0.0.1:3100'
     }
-    const msmt_url = '/static/data/vanilla_tor-last-6-months-measurements.csv'
-    const stat_url = '/static/data/vanilla_tor-last-6-months-stats.csv'
+    const msmt_url = '/data/vanilla-tor/20171130-vanilla_tor-measurements.csv'
+    const stat_url = '/data/vanilla-tor/20171130-vanilla_tor-stats.csv'
 
     let res = await axios.get(prefix + msmt_url)
     let data = d3Dsv.csvParse(res.data, (d) => {
