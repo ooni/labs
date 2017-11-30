@@ -4,6 +4,8 @@ import Link from 'next/link'
 import Head from 'next/head'
 import moment from 'moment'
 
+import Promise from 'bluebird'
+
 import NoSSR from 'react-no-ssr'
 
 import * as d3Dsv from 'd3-dsv'
@@ -191,9 +193,10 @@ export default class extends React.Component {
   constructor() {
     super()
     this.state = {
-      selectedCountries: []
+      selectedCountries: [],
+      dataByCountry: []
     }
-    this.handleChecked.bind(this)
+    this.handleChecked = this.handleChecked.bind(this)
   }
 
   static async getInitialProps({req}) {
@@ -201,25 +204,10 @@ export default class extends React.Component {
     if (req) {
       prefix = 'http://127.0.0.1:3100'
     }
-    const msmt_url = '/data/vanilla-tor/20171130-vanilla_tor-measurements.csv'
     const stat_url = '/data/vanilla-tor/20171130-vanilla_tor-stats.csv'
 
-    let res = await axios.get(prefix + msmt_url)
-    let data = d3Dsv.csvParse(res.data, (d) => {
-      return {
-        country: d.probe_cc,
-        asn: +d.probe_asn,
-        y: +d.test_runtime,
-        success: true ? d.tor_success == 'TRUE' : false,
-        x: moment(d.measurement_start_time).unix() * 1000
-      }
-    })
-    const dataByCountry = d3Collection.nest()
-      .key(d => d.country)
-      .entries(data)
-
-    res = await axios.get(prefix + stat_url)
-    data = d3Dsv.csvParse(res.data, (d) => {
+    const res = await axios.get(prefix + stat_url)
+    const data = d3Dsv.csvParse(res.data, (d) => {
       return {
         country: d.probe_cc,
         asn: +d.probe_asn,
@@ -235,36 +223,59 @@ export default class extends React.Component {
       .key(d => d.country)
       .entries(data)
 
-    const availableCountries = sortBy(dataByCountry
+    const availableCountries = sortBy(statsByCountry
       .map(d => ({
         'iso2': d.key,
         name: getCountryName(d.key)
       })), x => x.name)
 
     return {
-      dataByCountry,
       availableCountries,
       statsByCountry
     }
   }
 
   handleChecked(event, index, values) {
-    this.setState({ selectedCountries: values })
+    const selectedCountries = values.slice(-3)
+    const promises = selectedCountries.map(cc => {
+      const msmt_url = `/data/vanilla-tor/by-country/${cc}.csv`
+      return axios.get(msmt_url)
+    })
+    console.log(this.setState)
+    Promise.all(promises)
+      .then((results => {
+        let data = results.reduce((p, n)=> {
+          return p.concat(d3Dsv.csvParse(n.data, (d) => {
+            return {
+              country: d.probe_cc,
+              asn: +d.probe_asn,
+              y: +d.test_runtime,
+              success: true ? d.tor_success == 'TRUE' : false,
+              x: moment(d.measurement_start_time).unix() * 1000
+            }
+          }))
+        }, [])
+        console.log(data)
+        const dataByCountry = d3Collection.nest()
+          .key(d => d.country)
+          .entries(data)
+        this.setState({
+          selectedCountries,
+          dataByCountry
+        })
+      }).bind(this))
   }
 
   render () {
     const {
-      dataByCountry,
       availableCountries,
       statsByCountry
     } = this.props
 
     const {
+      dataByCountry,
       selectedCountries
     } = this.state
-
-    const title = 'XXX'
-    const subtitle = 'XXX'
 
     const dataFilter = (d) => {
       if (d.y > 320 || d.y < 0) {
@@ -290,7 +301,7 @@ export default class extends React.Component {
             multiple={true}
             hintText="Pick a country"
             value={selectedCountries}
-            onChange={(event, index, values) => this.setState({selectedCountries: values.slice(-3)})}
+            onChange={(event, index, values) => this.handleChecked(event, index, values)}
           >
             {availableCountries.map(({name, iso2}) => (
               <MenuItem
