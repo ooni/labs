@@ -296,6 +296,10 @@ export default class extends React.Component {
         </Head>
 
         <Container>
+
+          {selectedCountries.length == 0
+          && <Heading h={2}>Pick a country to get started!</Heading>}
+
           <Flex wrap>
           <NoSSR>
           <SelectField
@@ -317,6 +321,8 @@ export default class extends React.Component {
           </NoSSR>
           </Flex>
 
+          {selectedCountries.length > 0
+          && <div>
           <VictoryChart
             height={400}
             width={600}
@@ -374,6 +380,7 @@ export default class extends React.Component {
           </VictoryChart>
 
           <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
+          </div>}
           <Heading>Download</Heading>
           <ul>
           <li><Link href='/data/vanilla-tor/20171130-vanilla_tor-measurements.csv'>
