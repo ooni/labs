@@ -242,7 +242,6 @@ export default class extends React.Component {
       const msmt_url = `/data/vanilla-tor/by-country/${cc}.csv`
       return axios.get(msmt_url)
     })
-    console.log(this.setState)
     Promise.all(promises)
       .then((results => {
         let data = results.reduce((p, n)=> {
