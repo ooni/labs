@@ -1,0 +1,41 @@
+{
+  "name": "ooni-labs",
+  "version": "1.0.0-dev0",
+  "author": "",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {},
+  "dependencies": {
+    "axios": "^0.15.3",
+    "babel-plugin-inline-react-svg": "^0.4.0",
+    "babel-preset-es2015": "^6.24.0",
+    "babel-preset-react": "^6.23.0",
+    "babel-register": "^6.26.0",
+    "country-list": "^1.1.0",
+    "d3-collection": "^1.0.4",
+    "d3-dsv": "^1.0.5",
+    "dotenv": "^4.0.0",
+    "express": "^4.14.0",
+    "immutable": "^3.8.1",
+    "isomorphic-fetch": "^2.2.1",
+    "material-ui": "^0.19.4",
+    "moment": "^2.17.1",
+    "next": "^3.0.4",
+    "ooni-components": "^0.1.0-beta.7",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "react-no-ssr": "^1.1.0",
+    "rebass": "^1.0.4",
+    "styled-jsx": "^1.0.10",
+    "victory": "^0.24.2"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-define": "^1.2.0"
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development MEASUREMENTS_URL=http://127.0.0.1:3000 node index.js",
+    "build": "next build",
+    "export": "next export",
+    "start": "node index.js"
+  }
+}
