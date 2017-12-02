@@ -161,22 +161,6 @@ const Stats = ({selectedCountries, stats}) => {
             data={selectedData} />
         </VictoryChart>
       </Box>
-      <Box w={1/2}>
-        <VictoryChart
-          domainPadding={{y: 10, x: 40}}
-          height={400} width={400}>
-          <VictoryLabel text="ASNs" x={225} y={30} textAnchor="middle"/>
-          <VictoryBar
-            style={{
-                data: {
-                  fill: d => getColor(selectedCountries, d.country, true)
-                }
-            }}
-            y='asnCount'
-            x='country'
-            data={selectedData} />
-        </VictoryChart>
-      </Box>
     </Flex>
   )
 }
@@ -575,8 +559,8 @@ export default class extends React.Component {
           {selectedCountries.length > 0
           && <div>
 
-             <ScatterChart selectedCountries={selectedCountries} selectedData={selectedData}/>
              <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
+             <ScatterChart selectedCountries={selectedCountries} selectedData={selectedData}/>
           </div>}
 
           <Heading>Download</Heading>
