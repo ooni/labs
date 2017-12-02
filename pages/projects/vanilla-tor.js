@@ -6,9 +6,9 @@ import moment from 'moment'
 
 import styled from 'styled-components'
 
-import WeatherCloudy from '../../svgs/weather-cloudy.svg'
-import WeatherRainy from '../../svgs/weather-rainy.svg'
-import WeatherSunny from '../../svgs/weather-sunny.svg'
+import WeatherCloudySvg from '../../svgs/weather-cloudy.svg'
+import WeatherRainySvg from '../../svgs/weather-rainy.svg'
+import WeatherSunnySvg from '../../svgs/weather-sunny.svg'
 
 //weather-cloudy.svg          weather-rainy.svg
 //weather-lightning-rainy.svg weather-sunny.svg
@@ -276,13 +276,12 @@ const CountryTable = ({selectedCountries, statsByCountry, onRowSelection}) => {
 }
 
 const WeatherIcon = ({percentage}) => {
-  const size = '80px'
   if (percentage > 98) {
-    return <WeatherSunny height={size} width={size} />
+    return <WeatherSunnySvg />
   } else if (percentage < 50) {
-    return <WeatherRainy height={size} width={size} />
+    return <WeatherRainySvg />
   }
-  return <WeatherCloudy height={size} width={size} />
+  return <WeatherCloudySvg />
 }
 
 const Stat = styled.div`
@@ -299,7 +298,7 @@ const WeatherBox = ({stats}) => {
   return (
     <Flex wrap>
       <Box w={1/3} pr={2}>
-      <WeatherIcon percentage={stats.percentage} />
+        <WeatherIcon percentage={stats.percentage} />
       </Box>
       <Box w={2/3}>
         <Heading>{stats.countryName}</Heading>
