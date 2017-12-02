@@ -4,7 +4,6 @@ import {
   Heading,
   Hero,
   HeroLead,
-  LogoOONIRun,
   Link,
   Container
 } from 'ooni-components'

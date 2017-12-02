@@ -55,8 +55,9 @@ import {
   TableHeaderColumn,
   TableRow,
   TableRowColumn,
-} from 'material-ui/Table';
+} from 'material-ui/Table'
 
+import DataTables from 'material-ui-datatables'
 
 import Layout from '../../components/layout'
 
@@ -245,34 +246,153 @@ const ScatterChart = ({selectedCountries, selectedData}) => {
   )
 }
 
-const CountryTable = ({selectedCountries, statsByCountry, onRowSelection}) => {
-  return (
-    <Table height='310px' multiSelectable={true} onRowSelection={onRowSelection}>
-    <TableHeader displaySelectAll={false}>
-      <TableRow>
-        <TableHeaderColumn>Country</TableHeaderColumn>
-        <TableHeaderColumn>Bootstrap (min,avg,max)</TableHeaderColumn>
-        <TableHeaderColumn>Successes</TableHeaderColumn>
-        <TableHeaderColumn>Failures</TableHeaderColumn>
-        <TableHeaderColumn>Percentage</TableHeaderColumn>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {statsByCountry.map(d => {
-        const stats = d.values[0]
-        return (
-          <TableRow selected={selectedCountries.indexOf(stats.country) !== -1}>
-            <TableRowColumn>{stats.countryName}</TableRowColumn>
-            <TableRowColumn>{round(stats.runtimeMin, 2)},{round(stats.runtimeAvg, 2)},{round(stats.runtimeMax, 2)}</TableRowColumn>
-            <TableRowColumn>{stats.successCount}</TableRowColumn>
-            <TableRowColumn>{stats.failureCount}</TableRowColumn>
-            <TableRowColumn>{round(stats.successCount/(stats.failureCount+stats.successCount), 3)}</TableRowColumn>
-          </TableRow>
-        )
-      })}
-    </TableBody>
-    </Table>
-  )
+class CountryTable extends React.Component {
+
+  constructor(props, context) {
+    super(props, context)
+
+    const {
+      selectedCountries,
+      statsByCountry,
+      onRowSelection
+    } = props
+
+    let selectedRows = []
+    const data = statsByCountry.map((d, idx) => {
+      const stats = d.values[0]
+      if (selectedCountries.indexOf(stats.country) !== -1) {
+        selectedRows.push(idx)
+      }
+      return {
+        countryName: stats.countryName,
+        country: stats.country,
+        runtimeMin: round(stats.runtimeMin, 2),
+        runtimeAvg: round(stats.runtimeAvg, 2),
+        runtimeMax: round(stats.runtimeMax, 2),
+        successCount: stats.successCount,
+        failureCount: stats.failureCount,
+        successRate: round(stats.successCount/(stats.failureCount+stats.successCount) * 100, 1),
+        asnCount: stats.asnCount,
+      }
+    })
+
+    this.state = {
+      data: data,
+      selectedRows: selectedRows
+    }
+
+    this.handleSortOrderChange = this.handleSortOrderChange.bind(this)
+    this.handleRowSelection = this.handleRowSelection.bind(this)
+  }
+
+  handleRowSelection(rows) {
+    const newRow = rows.filter(row => this.state.selectedRows.indexOf(row) === -1)[0]
+    let selectedRows = this.state.selectedRows.slice() || []
+    if (this.state.selectedRows.length > 2) {
+      selectedRows = selectedRows.slice(-2)
+    }
+    selectedRows.push(newRow)
+    this.setState({
+      selectedRows
+    })
+    const selectedCountries = this.state.data
+      .filter((_, idx) => selectedRows.indexOf(idx) !== -1)
+      .map(d => d.country)
+    this.props.onRowSelection(selectedCountries)
+  }
+
+  handleSortOrderChange(key, order) {
+    let newData = sortBy(this.state.data, key)
+    if (order === 'asc') {
+      newData = newData.reverse()
+    }
+    this.setState({
+      data: newData
+    })
+  }
+
+  render() {
+    const {
+      selectedCountries,
+      statsByCountry,
+      onRowSelection
+    } = this.props
+
+    const {
+      data,
+      selectedRows
+    } = this.state
+
+    const columns = [
+      {
+        key: 'countryName',
+        sortable: true,
+        label: 'Country',
+        style: {
+          width: '150px'
+        },
+        render: (name, all) => {
+          if (name.length > 22) {
+            name = name.substring(0, 20)
+            name += '…'
+          }
+          return name
+        }
+      },
+      {
+        key: 'asnCount',
+        sortable: true,
+        label: 'ASNs',
+      },
+      {
+        key: 'runtimeAvg',
+        sortable: true,
+        label: 'avg (ms)',
+      },
+      {
+        key: 'runtimeMin',
+        sortable: true,
+        label: 'max (ms)',
+      },
+      {
+        key: 'runtimeMax',
+        sortable: true,
+        label: 'min (ms)',
+      },
+      {
+        key: 'successCount',
+        sortable: true,
+        label: 'Successes',
+      },
+      {
+        key: 'failureCount',
+        sortable: true,
+        label: 'Failures',
+      },
+      {
+        key: 'successRate',
+        sortable: true,
+        label: 'Score',
+      }
+    ]
+
+    return (
+      <DataTables
+          height={'300px'}
+          multiSelectable={true}
+          selectable={true}
+          showRowHover={true}
+          selectedRows={selectedRows}
+          columns={columns}
+          data={data}
+          showCheckboxes={true}
+          showFooterToolbar={false}
+          onRowSelection={this.handleRowSelection}
+          onSortOrderChange={this.handleSortOrderChange}
+        />
+    )
+
+  }
 }
 
 const WeatherIcon = ({percentage}) => {
@@ -308,7 +428,7 @@ const WeatherBox = ({stats}) => {
           <Stat>{round(stats.runtimeAvg, 1)}<StatSymbol>s</StatSymbol></Stat>
           </Box>
           <Box w={1/2}>
-          <Stat>{stats.asnCount}<StatSymbol>nets</StatSymbol></Stat>
+          <Stat>{stats.asnCount}<StatSymbol>ASN{stats.asnCount > 1 ? 's' : ''}</StatSymbol></Stat>
           </Box>
         </Flex>
       </Box>
@@ -373,14 +493,7 @@ export default class extends React.Component {
     }
   }
 
-  handleChecked(values) {
-    const countryValues = this.props
-      .statsByCountry
-      .filter((d, idx) => values.indexOf(idx) !== -1)
-      .map(d => d.key)
-    const newSelection = countryValues.filter(d => this.state.selectedCountries.indexOf(d) === -1)
-
-    const selectedCountries = this.state.selectedCountries.concat(newSelection).slice(-3)
+  handleChecked(selectedCountries) {
     this.setState({
       selectedCountries
     })
