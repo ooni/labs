@@ -4,6 +4,14 @@ import NLink from 'next/link'
 import Head from 'next/head'
 import moment from 'moment'
 
+import styled from 'styled-components'
+
+import WeatherCloudy from '../../svgs/weather-cloudy.svg'
+import WeatherRainy from '../../svgs/weather-rainy.svg'
+import WeatherSunny from '../../svgs/weather-sunny.svg'
+
+//weather-cloudy.svg          weather-rainy.svg
+//weather-lightning-rainy.svg weather-sunny.svg
 import Promise from 'bluebird'
 
 import NoSSR from 'react-no-ssr'
@@ -26,9 +34,18 @@ import {
   Textarea,
   Button,
   Heading,
-  colors
+  Text,
+  colors,
+  Hero,
+  HeroLead,
 } from 'ooni-components'
 
+const BrandContainer = styled.div`
+  max-width: 100%;
+  svg {
+    max-width: 100%;
+  }
+`
 import victoryTheme from 'ooni-components/dist/theme/victoryTheme'
 
 import {
@@ -90,33 +107,6 @@ const Stats = ({selectedCountries, stats}) => {
 
   return (
     <Flex wrap>
-      <Box w={1}>
-      <Table selectable={false}>
-      <TableHeader>
-        <TableRow>
-          <TableHeaderColumn>Country</TableHeaderColumn>
-          <TableHeaderColumn>Bootstrap (min,avg,max)</TableHeaderColumn>
-          <TableHeaderColumn>Successes</TableHeaderColumn>
-          <TableHeaderColumn>Failures</TableHeaderColumn>
-          <TableHeaderColumn>Percentage</TableHeaderColumn>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {selectedCountries.map(cc => {
-          const stats = selectedData.filter(d => d.country == cc)[0]
-          return (
-            <TableRow>
-              <TableRowColumn>{stats.country}</TableRowColumn>
-              <TableRowColumn>{round(stats.runtimeMin, 2)},{round(stats.runtimeAvg, 2)},{round(stats.runtimeMax, 2)}</TableRowColumn>
-              <TableRowColumn>{stats.successCount}</TableRowColumn>
-              <TableRowColumn>{stats.failureCount}</TableRowColumn>
-              <TableRowColumn>{round(stats.successCount/(stats.failureCount+stats.successCount), 3)}</TableRowColumn>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-      </Table>
-      </Box>
       <Box w={1/2}>
         <VictoryChart
           domainPadding={{y: 10, x: 40}}
@@ -190,6 +180,155 @@ const Stats = ({selectedCountries, stats}) => {
   )
 }
 
+const ScatterChart = ({selectedCountries, selectedData}) => {
+  const dataFilter = (d) => {
+    if (d.y > 320 || d.y < 0) {
+      return false
+    }
+    return true
+  }
+  return (
+  <VictoryChart
+    height={400}
+    width={600}
+    domainPadding={{y: 10}}
+    scale={{x: "time"}}
+    theme={victoryTheme}
+    containerComponent={
+    <VictoryVoronoiContainer
+      dimension='x'
+      labels={
+        (d) => `${d.country} (AS${d.asn}): ${d.y} ${moment(d.x).format('YY-MM-DD')}`
+      }
+      labelComponent={
+        <VictoryTooltip
+          cornerRadius={0}
+          flyoutStyle={{fill: "white"}}
+        />}
+    />}>
+
+    <VictoryLegend x={125} y={50}
+        orientation="horizontal"
+      data={selectedCountries.map(d => {
+        const name = countries.getName(d.toUpperCase()) || 'Unknown'
+        return {
+          name: name,
+          symbol: {
+            fill: getColor(selectedCountries, d)
+          }
+        }
+      })}/>
+
+    <VictoryScatter
+      style={{
+        data: {
+          fill: d => getColor(selectedCountries, d.country, d.success)
+        }
+      }}
+      size={(d, active) => active ? 2 : 1}
+      data={selectedData.filter(dataFilter)}
+    />
+    <VictoryAxis
+      label="date"
+      style={{
+        axisLabel: { padding: 30 }
+      }}
+      tickFormat={x => moment(x).format('MMM \'YY')}
+    />
+    <VictoryAxis dependentAxis
+      label="tor runtime"
+      style={{
+        axisLabel: { padding: 40 }
+      }}
+    />
+  </VictoryChart>
+  )
+}
+
+const CountryTable = ({selectedCountries, statsByCountry, onRowSelection}) => {
+  return (
+    <Table height='310px' multiSelectable={true} onRowSelection={onRowSelection}>
+    <TableHeader displaySelectAll={false}>
+      <TableRow>
+        <TableHeaderColumn>Country</TableHeaderColumn>
+        <TableHeaderColumn>Bootstrap (min,avg,max)</TableHeaderColumn>
+        <TableHeaderColumn>Successes</TableHeaderColumn>
+        <TableHeaderColumn>Failures</TableHeaderColumn>
+        <TableHeaderColumn>Percentage</TableHeaderColumn>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {statsByCountry.map(d => {
+        const stats = d.values[0]
+        return (
+          <TableRow selected={selectedCountries.indexOf(stats.country) !== -1}>
+            <TableRowColumn>{stats.countryName}</TableRowColumn>
+            <TableRowColumn>{round(stats.runtimeMin, 2)},{round(stats.runtimeAvg, 2)},{round(stats.runtimeMax, 2)}</TableRowColumn>
+            <TableRowColumn>{stats.successCount}</TableRowColumn>
+            <TableRowColumn>{stats.failureCount}</TableRowColumn>
+            <TableRowColumn>{round(stats.successCount/(stats.failureCount+stats.successCount), 3)}</TableRowColumn>
+          </TableRow>
+        )
+      })}
+    </TableBody>
+    </Table>
+  )
+}
+
+const WeatherIcon = ({percentage}) => {
+  const size = '80px'
+  if (percentage > 98) {
+    return <WeatherSunny height={size} width={size} />
+  } else if (percentage < 50) {
+    return <WeatherRainy height={size} width={size} />
+  }
+  return <WeatherCloudy height={size} width={size} />
+}
+
+const Stat = styled.div`
+  font-size: 30px;
+`
+
+const StatSymbol = styled.div`
+  font-size: 12px;
+  padding-left: 5px;
+  display: inline-block;
+`
+
+const WeatherBox = ({stats}) => {
+  return (
+    <Flex wrap>
+      <Box w={1/3} pr={2}>
+      <WeatherIcon percentage={stats.percentage} />
+      </Box>
+      <Box w={2/3}>
+        <Heading>{stats.countryName}</Heading>
+        <Flex wrap>
+          <Box w={1/2}>
+          <Stat>{round(stats.percentage, 1)}<StatSymbol>%</StatSymbol></Stat>
+          <Stat>{round(stats.runtimeAvg, 1)}<StatSymbol>s</StatSymbol></Stat>
+          </Box>
+          <Box w={1/2}>
+          <Stat>{stats.asnCount}<StatSymbol>nets</StatSymbol></Stat>
+          </Box>
+        </Flex>
+      </Box>
+    </Flex>
+  )
+}
+
+const WeatherTable = ({selectedCountries, keyedStatsByCountry}) => {
+  return (
+    <Flex wrap>
+      {selectedCountries.map(key => (
+      <Box w={1/3} key={key}>
+        <WeatherBox stats={keyedStatsByCountry[key]} />
+      </Box>
+      ))}
+    </Flex>
+  )
+}
+
 export default class extends React.Component {
   constructor() {
     super()
@@ -208,9 +347,11 @@ export default class extends React.Component {
     const stat_url = '/data/vanilla-tor/20171130-vanilla_tor-stats.csv'
 
     const res = await axios.get(prefix + stat_url)
+    const keyedStatsByCountry = {}
     const data = d3Dsv.csvParse(res.data, (d) => {
-      return {
+      let stats = {
         country: d.probe_cc,
+        countryName: getCountryName(d.probe_cc),
         asn: +d.probe_asn,
         asnCount: +d.probe_asn_count,
         successCount: +d.success_count,
@@ -219,25 +360,31 @@ export default class extends React.Component {
         runtimeMin: +d.test_runtime_min,
         runtimeMax: +d.test_runtime_max
       }
+      stats['percentage'] = round(stats.successCount/(stats.failureCount+stats.successCount), 3) * 100
+      keyedStatsByCountry[d.probe_cc] = stats
+      return stats
     })
-    const statsByCountry = d3Collection.nest()
+    let statsByCountry = sortBy(d3Collection.nest()
       .key(d => d.country)
-      .entries(data)
-
-    const availableCountries = sortBy(statsByCountry
-      .map(d => ({
-        'iso2': d.key,
-        name: getCountryName(d.key)
-      })), x => x.name)
+      .entries(data), x => x.values[0].countryName)
 
     return {
-      availableCountries,
-      statsByCountry
+      statsByCountry,
+      keyedStatsByCountry
     }
   }
 
-  handleChecked(event, index, values) {
-    const selectedCountries = values.slice(-3)
+  handleChecked(values) {
+    const countryValues = this.props
+      .statsByCountry
+      .filter((d, idx) => values.indexOf(idx) !== -1)
+      .map(d => d.key)
+    const newSelection = countryValues.filter(d => this.state.selectedCountries.indexOf(d) === -1)
+
+    const selectedCountries = this.state.selectedCountries.concat(newSelection).slice(-3)
+    this.setState({
+      selectedCountries
+    })
     const promises = selectedCountries.map(cc => {
       const msmt_url = `/data/vanilla-tor/by-country/${cc}.csv`
       return axios.get(msmt_url)
@@ -255,34 +402,26 @@ export default class extends React.Component {
             }
           }))
         }, [])
-        console.log(data)
         const dataByCountry = d3Collection.nest()
           .key(d => d.country)
           .entries(data)
         this.setState({
-          selectedCountries,
           dataByCountry
         })
+        dataByCountry
       }).bind(this))
   }
 
   render () {
     const {
-      availableCountries,
-      statsByCountry
+      statsByCountry,
+      keyedStatsByCountry
     } = this.props
 
     const {
       dataByCountry,
       selectedCountries
     } = this.state
-
-    const dataFilter = (d) => {
-      if (d.y > 320 || d.y < 0) {
-        return false
-      }
-      return true
-    }
 
     const selectedData = dataByCountry
       .filter(d => selectedCountries.indexOf(d.key) !== -1)
@@ -294,92 +433,40 @@ export default class extends React.Component {
           <title>Bar chart</title>
         </Head>
 
-        <Container>
+        <Hero pb={4} pt={4}>
+          <BrandContainer>
+            <Heading h={1}>Vanilla Tor</Heading>
+          </BrandContainer>
+          <HeroLead>
+          What is the Tor weather like around the world
+        </HeroLead>
+        </Hero>
+
+        <Container pt={4}>
 
           {selectedCountries.length == 0
           && <Heading h={2}>Pick a country to get started!</Heading>}
 
-          <Flex wrap>
-          <NoSSR>
-          <SelectField
-            multiple={true}
-            hintText="Pick a country"
-            value={selectedCountries}
-            onChange={(event, index, values) => this.handleChecked(event, index, values)}
-          >
-            {availableCountries.map(({name, iso2}) => (
-              <MenuItem
-                key={iso2}
-                insetChildren={true}
-                checked={selectedCountries && selectedCountries.indexOf(iso2) > -1}
-                value={iso2}
-                primaryText={name}
+          {selectedCountries.length > 0
+          && <WeatherTable
+              selectedCountries={selectedCountries}
+              keyedStatsByCountry={keyedStatsByCountry}
               />
-            ))}
-          </SelectField>
-          </NoSSR>
-          </Flex>
+          }
+
+          <CountryTable
+            selectedCountries={selectedCountries}
+            statsByCountry={statsByCountry}
+            onRowSelection={this.handleChecked}
+          />
 
           {selectedCountries.length > 0
           && <div>
-          <VictoryChart
-            height={400}
-            width={600}
-            domainPadding={{y: 10}}
-            scale={{x: "time"}}
-            theme={victoryTheme}
-            containerComponent={
-            <VictoryVoronoiContainer
-              dimension='x'
-              labels={
-                (d) => `${d.country} (AS${d.asn}): ${d.y} ${moment(d.x).format('YY-MM-DD')}`
-              }
-              labelComponent={
-                <VictoryTooltip
-                  cornerRadius={0}
-                  flyoutStyle={{fill: "white"}}
-                />}
-            />}>
 
-            {selectedCountries.length > 0
-            && <VictoryLegend x={125} y={50}
-                orientation="horizontal"
-              data={selectedCountries.map(d => {
-                const name = countries.getName(d.toUpperCase()) || 'Unknown'
-                return {
-                  name: name,
-                  symbol: {
-                    fill: getColor(selectedCountries, d)
-                  }
-                }
-              })}/>}
-
-            <VictoryScatter
-              style={{
-                data: {
-                  fill: d => getColor(selectedCountries, d.country, d.success)
-                }
-              }}
-              size={(d, active) => active ? 2 : 1}
-              data={selectedData.filter(dataFilter)}
-            />
-            <VictoryAxis
-              label="date"
-              style={{
-                axisLabel: { padding: 30 }
-              }}
-              tickFormat={x => moment(x).format('MMM \'YY')}
-            />
-            <VictoryAxis dependentAxis
-              label="tor runtime"
-              style={{
-                axisLabel: { padding: 40 }
-              }}
-            />
-          </VictoryChart>
-
-          <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
+             <ScatterChart selectedCountries={selectedCountries} selectedData={selectedData}/>
+             <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
           </div>}
+
           <Heading>Download</Heading>
           <ul>
           <li><Link href='/data/vanilla-tor/20171130-vanilla_tor-measurements.csv'>
