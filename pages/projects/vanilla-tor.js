@@ -6,9 +6,9 @@ import moment from 'moment'
 
 import styled from 'styled-components'
 
-import WeatherCloudySvg from '../../svgs/weather-cloudy.svg'
-import WeatherRainySvg from '../../svgs/weather-rainy.svg'
-import WeatherSunnySvg from '../../svgs/weather-sunny.svg'
+import SvgWeatherCloudy from '../../svgs/weather-cloudy.svg'
+import SvgWeatherRainy from '../../svgs/weather-rainy.svg'
+import SvgWeatherSunny from '../../svgs/weather-sunny.svg'
 
 //weather-cloudy.svg          weather-rainy.svg
 //weather-lightning-rainy.svg weather-sunny.svg
@@ -24,6 +24,13 @@ import { Flex, Box, Grid } from 'rebass'
 
 import SelectField from 'material-ui/SelectField'
 import MenuItem from 'material-ui/MenuItem'
+import {
+  Card,
+  CardHeader,
+  CardActions,
+  CardTitle,
+  CardText
+} from 'material-ui/Card'
 
 import {
   Container,
@@ -214,14 +221,14 @@ const ScatterChart = ({selectedCountries, selectedData}) => {
       data={selectedData.filter(dataFilter)}
     />
     <VictoryAxis
-      label="date"
+      label="Date"
       style={{
         axisLabel: { padding: 30 }
       }}
       tickFormat={x => moment(x).format('MMM \'YY')}
     />
     <VictoryAxis dependentAxis
-      label="tor runtime"
+      label="Bootstrap time"
       style={{
         axisLabel: { padding: 40 }
       }}
@@ -381,11 +388,11 @@ class CountryTable extends React.Component {
 
 const WeatherIcon = ({percentage}) => {
   if (percentage > 98) {
-    return <WeatherSunnySvg />
+    return <SvgWeatherSunny />
   } else if (percentage < 50) {
-    return <WeatherRainySvg />
+    return <SvgWeatherRainy />
   }
-  return <WeatherCloudySvg />
+  return <SvgWeatherCloudy />
 }
 
 const Stat = styled.div`
@@ -398,25 +405,35 @@ const StatSymbol = styled.div`
   display: inline-block;
 `
 
+const StyledCardHeader = styled(CardHeader)`
+padding-right: 0px;
+text-align: center;
+&>div {
+  padding-right: 0px !important;
+}
+`
+
 const WeatherBox = ({stats}) => {
   return (
-    <Flex wrap>
-      <Box w={1/3} pr={2}>
-        <WeatherIcon percentage={stats.percentage} />
-      </Box>
-      <Box w={2/3}>
-        <Heading>{stats.countryName}</Heading>
-        <Flex wrap>
-          <Box w={1/2}>
+    <Card>
+      <StyledCardHeader title={stats.countryName} />
+      <CardText>
+      <Flex wrap justify='space-around' align='center' pb={3}>
+        <Box w={1/2} pr={2}>
+          <WeatherIcon percentage={stats.percentage} />
+        </Box>
+      </Flex>
+      <Flex wrap>
+        <Box w={1/2}>
           <Stat>{round(stats.percentage, 1)}<StatSymbol>%</StatSymbol></Stat>
-          <Stat>{round(stats.runtimeAvg, 1)}<StatSymbol>s</StatSymbol></Stat>
-          </Box>
-          <Box w={1/2}>
           <Stat>{stats.asnCount}<StatSymbol>ASN{stats.asnCount > 1 ? 's' : ''}</StatSymbol></Stat>
-          </Box>
-        </Flex>
-      </Box>
-    </Flex>
+        </Box>
+        <Box w={1/2}>
+          <Stat>{round(stats.runtimeAvg, 1)}<StatSymbol>s</StatSymbol></Stat>
+        </Box>
+      </Flex>
+      </CardText>
+    </Card>
   )
 }
 
@@ -424,7 +441,7 @@ const WeatherTable = ({selectedCountries, keyedStatsByCountry}) => {
   return (
     <Flex wrap>
       {selectedCountries.map(key => (
-      <Box w={1/3} key={key}>
+      <Box w={1/3} key={key} pb={2} pr={2}>
         <WeatherBox stats={keyedStatsByCountry[key]} />
       </Box>
       ))}
@@ -531,10 +548,10 @@ export default class extends React.Component {
 
         <Hero pb={4} pt={4}>
           <BrandContainer>
-            <Heading h={1}>Vanilla Tor</Heading>
+            <Heading h={1}>Onion weather</Heading>
           </BrandContainer>
           <HeroLead>
-          What is the Tor weather like around the world
+          How well does Tor work around the world?
         </HeroLead>
         </Hero>
 
@@ -560,6 +577,7 @@ export default class extends React.Component {
           && <div>
 
              <Stats stats={statsByCountry} selectedCountries={selectedCountries} />
+             <Heading h={2}>Bootstrap time</Heading>
              <ScatterChart selectedCountries={selectedCountries} selectedData={selectedData}/>
           </div>}
 
