@@ -9,6 +9,7 @@ import styled from 'styled-components'
 import SvgWeatherCloudy from '../../svgs/weather-cloudy.svg'
 import SvgWeatherRainy from '../../svgs/weather-rainy.svg'
 import SvgWeatherSunny from '../../svgs/weather-sunny.svg'
+import SvgOnionWeather from '../../svgs/onion-weather.svg'
 
 //weather-cloudy.svg          weather-rainy.svg
 //weather-lightning-rainy.svg weather-sunny.svg
@@ -449,6 +450,9 @@ const WeatherTable = ({selectedCountries, keyedStatsByCountry}) => {
   )
 }
 
+const StyledHero = styled(Hero)`
+  background-color: ${props => props.theme.colors.gray8};
+`
 export default class extends React.Component {
   constructor() {
     super()
@@ -546,14 +550,14 @@ export default class extends React.Component {
           <title>Bar chart</title>
         </Head>
 
-        <Hero pb={4} pt={4}>
+        <StyledHero pb={4} pt={4}>
           <BrandContainer>
-            <Heading h={1}>Onion weather</Heading>
+            <SvgOnionWeather />
           </BrandContainer>
           <HeroLead>
           How well does Tor work around the world?
         </HeroLead>
-        </Hero>
+        </StyledHero>
 
         <Container pt={4}>
 
