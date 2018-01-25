@@ -1,6 +1,6 @@
 {
   "name": "ooni-labs",
-  "version": "1.0.0-dev0",
+  "version": "1.0.0-dev1",
   "author": "",
   "license": "MIT",
   "main": "index.js",
@@ -23,7 +23,7 @@
     "material-ui": "^0.19.4",
     "material-ui-datatables": "^0.18.2",
     "moment": "^2.17.1",
-    "next": "^3.0.4",
+    "next": "^3.2.3",
     "ooni-components": "^0.1.0-beta.7",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
