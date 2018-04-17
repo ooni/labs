@@ -2,7 +2,7 @@
   "name": "ooni-labs",
   "version": "1.0.0-dev1",
   "author": "",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "main": "index.js",
   "repository": {},
   "dependencies": {
